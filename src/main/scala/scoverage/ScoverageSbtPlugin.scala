@@ -269,17 +269,17 @@ object ScoverageSbtPlugin extends AutoPlugin {
       def is100(d: Double) = Math.abs(100 - d) <= 0.00001
 
       if (is100(min) && is100(percentage)) {
-        log.info(s"100% $coverageType Coverage !")
+        log.info(s"100% $coverageType coverage !")
       } else if (min > percentage) {
-        log.error(s"$coverageType Coverage is below minimum [$formatted% < $min%]")
+        log.error(s"$coverageType coverage is below minimum [$formatted% < $min%]")
         if (failOnMin)
-          throw new RuntimeException(s"$coverageType Coverage minimum was not reached")
+          throw new RuntimeException(s"$coverageType coverage minimum was not reached")
       } else {
-        log.info(s"$coverageType Coverage is above minimum [$formatted% > $min%]")
+        log.info(s"$coverageType coverage is above minimum [$formatted% > $min%]")
       }
     }
 
-    log.info(s"All done. $coverageType Coverage was [$formatted%]")
+    log.info(s"All done. $coverageType coverage was [$formatted%]")
   }
 
   private def sourceEncoding(scalacOptions: Seq[String]): Option[String] = {
