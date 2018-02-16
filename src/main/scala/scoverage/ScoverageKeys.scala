@@ -10,6 +10,8 @@ object ScoverageKeys {
   lazy val coverageExcludedFiles = settingKey[String]("regex for excluded file paths")
   lazy val coverageMinimum = settingKey[Double]("scoverage-minimum-coverage")
   lazy val coverageFailOnMinimum = settingKey[Boolean]("if coverage is less than this value then fail build")
+  lazy val coverageBranchMinimum = settingKey[Double]("scoverage-minimum-branch-coverage")
+  lazy val coverageBranchFailOnMinimum = settingKey[Boolean]("if branch coverage is less than this value then fail build")
   lazy val coverageHighlighting = settingKey[Boolean]("enables range positioning for highlighting")
   lazy val coverageOutputCobertura = settingKey[Boolean]("enables cobertura XML report generation")
   lazy val coverageOutputXML = settingKey[Boolean]("enables xml report generation")

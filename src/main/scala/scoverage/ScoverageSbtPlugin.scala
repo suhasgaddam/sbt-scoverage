@@ -29,6 +29,8 @@ object ScoverageSbtPlugin extends AutoPlugin {
     coverageExcludedFiles := "",
     coverageMinimum := 0, // default is no minimum
     coverageFailOnMinimum := false,
+    coverageBranchMinimum := 0, // default is no minimum
+    coverageBranchFailOnMinimum := false,
     coverageHighlighting := true,
     coverageOutputXML := true,
     coverageOutputHTML := true,
@@ -123,7 +125,11 @@ object ScoverageSbtPlugin extends AutoPlugin {
           sourceEncoding((scalacOptions in (Compile)).value),
           log)
 
-        checkCoverage(cov, log, coverageMinimum.value, coverageFailOnMinimum.value)
+        checkCoverage(cov, log, coverageMinimum.value, coverageFailOnMinimum.value)(
+          Statement, cov.statementCoveragePercent, cov.statementCoverageFormatted)
+
+        checkCoverage(cov, log, coverageBranchMinimum.value, coverageBranchFailOnMinimum.value)(
+          Branch, cov.branchCoveragePercent, cov.branchCoverageFormatted)
       case None => log.warn("No coverage data, skipping reports")
     }
   }
@@ -150,7 +156,11 @@ object ScoverageSbtPlugin extends AutoPlugin {
         val cfmt = cov.statementCoverageFormatted
         log.info(s"Aggregation complete. Coverage was [$cfmt]")
 
-        checkCoverage(cov, log, coverageMinimum.value, coverageFailOnMinimum.value)
+        checkCoverage(cov, log, coverageMinimum.value, coverageFailOnMinimum.value)(
+          Statement, cov.statementCoveragePercent, cov.statementCoverageFormatted)
+
+        checkCoverage(cov, log, coverageBranchMinimum.value, coverageBranchFailOnMinimum.value)(
+          Branch, cov.branchCoveragePercent, cov.branchCoverageFormatted)
       case None =>
         log.info("No subproject data to aggregate, skipping reports")
     }
@@ -242,30 +252,34 @@ object ScoverageSbtPlugin extends AutoPlugin {
     }
   }
 
+  sealed trait CoverageType
+  private final case object Statement extends CoverageType
+  private final case object Branch extends CoverageType
+
   private def checkCoverage(coverage: Coverage,
                             log: Logger,
                             min: Double,
-                            failOnMin: Boolean): Unit = {
-
-    val cper = coverage.statementCoveragePercent
-    val cfmt = coverage.statementCoverageFormatted
+                            failOnMin: Boolean)(
+                            coverageType: CoverageType,
+                            percentage: Double,
+                            formatted: String): Unit = {
 
     // check for default minimum
     if (min > 0) {
       def is100(d: Double) = Math.abs(100 - d) <= 0.00001
 
-      if (is100(min) && is100(cper)) {
-        log.info(s"100% Coverage !")
-      } else if (min > cper) {
-        log.error(s"Coverage is below minimum [$cfmt% < $min%]")
+      if (is100(min) && is100(percentage)) {
+        log.info(s"100% $coverageType Coverage !")
+      } else if (min > percentage) {
+        log.error(s"$coverageType Coverage is below minimum [$formatted% < $min%]")
         if (failOnMin)
-          throw new RuntimeException("Coverage minimum was not reached")
+          throw new RuntimeException(s"$coverageType Coverage minimum was not reached")
       } else {
-        log.info(s"Coverage is above minimum [$cfmt% > $min%]")
+        log.info(s"$coverageType Coverage is above minimum [$formatted% > $min%]")
       }
     }
 
-    log.info(s"All done. Coverage was [$cfmt%]")
+    log.info(s"All done. $coverageType Coverage was [$formatted%]")
   }
 
   private def sourceEncoding(scalacOptions: Seq[String]): Option[String] = {
